@@ -9,16 +9,16 @@ Description: >
 Parameters:
   db_host:
     Type: String
-    Default: mumbai.cjxqih7putd2.ap-south-1.rds.amazonaws.com
+    Default: mumbai
   db_name:
     Type: String
-    Default: dms
+    Default: postgres
   db_user:  
     Type: String
     Default: postgres
   db_pass:
     Type: String
-    Default: Ks1Jq1Sa6aeqkh8uYIg1
+    Default: secret
   jwt_key:
     Type: String
     Default: default
