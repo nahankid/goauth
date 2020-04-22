@@ -4,6 +4,7 @@ import (
 	"auth/lib"
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -38,6 +39,9 @@ func generatePolicy(principalID, effect, resource string) events.APIGatewayCusto
 func handleRequest(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	token := event.AuthorizationToken
 	parse, e := lib.ValidateToken(token)
+
+	fmt.Println("Token", parse)
+
 	if e != nil || !parse.Valid {
 		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("Unauthorized")
 	}
