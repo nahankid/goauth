@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  auth
+  
+  Sample SAM Template for auth
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Parameters:
+  db_host:
+    Type: String
+    Default: mumbai.cjxqih7putd2.ap-south-1.rds.amazonaws.com
+  db_name:
+    Type: String
+    Default: dms
+  db_user:  
+    Type: String
+    Default: postgres
+  db_pass:
+    Type: String
+    Default: Ks1Jq1Sa6aeqkh8uYIg1
+  jwt_key:
+    Type: String
+    Default: default
+
+Globals:
+  Function:
+    Timeout: 20  
+    Runtime: go1.x
+    Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+      Variables:  
+        db_host: !Ref db_host
+        db_name: !Ref db_name
+        db_user: !Ref db_user
+        db_pass: !Ref db_pass
+        jwt_key: !Ref jwt_key
+
+Resources:
+  AuthApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: MyLambdaTokenAuthorizer
+        Authorizers:
+          MyLambdaTokenAuthorizer:
+            FunctionArn: !GetAtt CustomAuthorizerFunction.Arn
+  
+  CustomAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: controllers/authorizer
+      Handler: authorizer
+      Runtime: go1.x
+
+  SignupFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: controllers/signup
+      Handler: signup
+      Runtime: go1.x
+      Events:
+        CatchAll:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties: 
+            RestApiId: !Ref AuthApi
+            Auth:
+              Authorizer: 'NONE'
+            Path: /signup
+            Method: POST
+
+  LoginFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: controllers/login
+      Handler: login
+      Runtime: go1.x
+      Events:
+        Login:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId: !Ref AuthApi
+            Auth:
+              Authorizer: 'NONE'
+            Path: /login
+            Method: POST
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  AuthAPI:
+    Description: "API Gateway endpoint URL for Prod environment for Auth"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
