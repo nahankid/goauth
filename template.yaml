@@ -5,35 +5,18 @@ Description: >
   
   Sample SAM Template for auth
 
-Parameters:
-  db_host:
-    Type: String
-    Default: mumbai
-  db_name:
-    Type: String
-    Default: postgres
-  db_user:  
-    Type: String
-    Default: postgres
-  db_pass:
-    Type: String
-    Default: secret
-  jwt_key:
-    Type: String
-    Default: default
-
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 20  
+    Timeout: 5 
     Runtime: go1.x
     Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
       Variables:  
-        db_host: !Ref db_host
-        db_name: !Ref db_name
-        db_user: !Ref db_user
-        db_pass: !Ref db_pass
-        jwt_key: !Ref jwt_key
+        db_host: mumbai.cjxqih7putd2.ap-south-1.rds.amazonaws.com
+        db_user: postgres
+        db_name: dms
+        db_pass: Ks1Jq1Sa6aeqkh8uYIg1
+        jwt_key: Ks1Jq1Sa6aeqkh8uYIg1
 
 Resources:
   AuthApi:
@@ -45,7 +28,8 @@ Resources:
         Authorizers:
           MyLambdaTokenAuthorizer:
             FunctionArn: !GetAtt CustomAuthorizerFunction.Arn
-  
+        ApiKeyRequired: true
+
   CustomAuthorizerFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -99,9 +83,9 @@ Resources:
             Path: /profile
             Method: GET
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # AuthApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   AuthAPI:
     Description: "API Gateway endpoint URL for Prod environment for Auth"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+    Value: !Sub "https://${AuthApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

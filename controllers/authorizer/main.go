@@ -2,9 +2,10 @@ package main
 
 import (
 	"auth/lib"
+	"auth/types"
 	"context"
 	"errors"
-	"fmt"
+	"log"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -29,9 +30,7 @@ func generatePolicy(principalID, effect, resource string) events.APIGatewayCusto
 
 	// Optional output with custom properties of the String, Number or Boolean type.
 	authResponse.Context = map[string]interface{}{
-		"stringKey":  "stringval",
-		"numberKey":  123,
-		"booleanKey": true,
+		"sub": principalID,
 	}
 	return authResponse
 }
@@ -40,12 +39,14 @@ func handleRequest(ctx context.Context, event events.APIGatewayCustomAuthorizerR
 	token := event.AuthorizationToken
 	parse, e := lib.ValidateToken(token)
 
-	fmt.Println("Token", parse)
-
 	if e != nil || !parse.Valid {
 		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("Unauthorized")
 	}
-	return generatePolicy("user", "Allow", event.MethodArn), nil
+
+	claims := parse.Claims.(*types.CustomClaims)
+	log.Println("Claims", claims)
+
+	return generatePolicy(claims.Subject, "Allow", event.MethodArn), nil
 }
 
 func main() {

@@ -4,6 +4,7 @@ import (
 	"auth/models"
 	"auth/types"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -37,7 +38,7 @@ func ValidateToken(token string) (*jwt.Token, error) {
 // CreateToken creates token
 func CreateToken(user models.User, tokenType string, expireTime time.Time) (string, error) {
 	var claim types.CustomClaims
-	claim.Id = string(user.ID)
+	claim.Subject = strconv.FormatUint(uint64(user.ID), 10)
 	claim.Type = tokenType
 	expiresAt := expireTime
 	claim.ExpiresAt = expiresAt.Unix()

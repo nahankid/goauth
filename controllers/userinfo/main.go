@@ -4,25 +4,30 @@ import (
 	"auth/db"
 	"auth/lib"
 	"auth/models"
-	"encoding/binary"
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
 func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	sub := request.RequestContext.Authorizer["sub"]
 
-	token := request.Headers["Authorization"]
-	fmt.Println("token in userinfo handler", token)
+	var str string
+	var ok bool
 
-	// userId := common.GetStore().Get(token, false)
+	if str, ok = sub.(string); !ok || str == "" {
+		log.Println("Subject in Authorizer Response is either empty or not a string")
+		return lib.APIResponse(http.StatusBadRequest, "Invalid token")
+	}
 
-	userID := []byte(token)
-
-	fmt.Println("Userer", userID)
+	userID, err := strconv.Atoi(str)
+	if err != nil || userID <= 0 {
+		return lib.APIResponse(http.StatusBadRequest, err.Error())
+	}
 
 	// Open Database Connection
 	pgConn := db.PGConn{}
@@ -32,12 +37,11 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		return lib.APIResponse(http.StatusInternalServerError, err.Error())
 	}
 
-	var userFilter models.User
-	u, _ := binary.Uvarint(userID)
-	userFilter.ID = uint(u)
+	var filter models.User
+	filter.ID = uint(userID)
 
 	var user models.User
-	db2.Where(userFilter).Find(&user)
+	db2.Where(filter).Find(&user)
 
 	res, err := json.Marshal(user)
 	if err != nil {
