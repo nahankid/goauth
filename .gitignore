@@ -15,4 +15,3 @@
 # vendor/
 .aws-sam/
 samconfig.toml
-template.yaml
